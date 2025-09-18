@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ game.title }} - GameSite{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                {% if game.image %}
+                    <img src="{{ game.image.url }}" class="card-img-top" alt="{{ game.title }}" style="height: 400px; object-fit: cover;">
+                {% else %}
+                    <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 400px;">
+                        <i class="fas fa-image fa-5x text-white"></i>
+                    </div>
+                {% endif %}
+                <div class="card-body">
+                    <h1 class="card-title">{{ game.title }}</h1>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1">
+                                <i class="fas fa-user me-2"></i><strong>Разработчик:</strong> {{ game.developer }}
+                            </p>
+                            <p class="text-muted mb-1">
+                                <i class="fas fa-tag me-2"></i><strong>Жанр:</strong> {{ game.genre }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1">
+                                <i class="fas fa-calendar me-2"></i><strong>Дата выпуска:</strong> {{ game.release_date }}
+                            </p>
+                            <p class="text-muted mb-1">
+                                <i class="fas fa-user me-2"></i><strong>Загружено:</strong> {{ game.uploaded_by.username }}
+                            </p>
+                        </div>
+                    </div>
+                    <h4>Описание</h4>
+                    <p class="card-text">{{ game.description|linebreaks }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h2 class="text-success mb-4">{{ game.price }} ₽</h2>
+                    {% if game.game_file %}
+                        <a href="{{ game.game_file.url }}" class="btn btn-success btn-lg w-100 mb-3" download>
+                            <i class="fas fa-download me-2"></i>Скачать игру
+                        </a>
+                    {% else %}
+                        <button class="btn btn-secondary btn-lg w-100 mb-3" disabled>
+                            <i class="fas fa-exclamation-triangle me-2"></i>Файл недоступен
+                        </button>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <h5>Информация о файле</h5>
+                        {% if game.game_file %}
+                            <p class="text-muted">
+                                <i class="fas fa-file me-2"></i>
+                                {{ game.game_file.name|slice:"13:" }}
+                            </p>
+                        {% endif %}
+                        <p class="text-muted small">
+                            <i class="fas fa-clock me-2"></i>
+                            Загружено: {{ game.created_at|date:"d.m.Y H:i" }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Дополнительная информация -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5>Системные требования</h5>
+                    <p class="text-muted">Информация о системных требованиях будет добавлена в следующих версиях.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Навигация -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <a href="{% url 'game_list' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Назад к списку игр
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
