@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Загрузить игру - GameSite{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">
+                        <i class="fas fa-upload me-2"></i>Загрузить новую игру
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.title.id_for_label }}" class="form-label">Название игры *</label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                    <div class="text-danger small">{{ form.title.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.developer.id_for_label }}" class="form-label">Разработчик *</label>
+                                {{ form.developer }}
+                                {% if form.developer.errors %}
+                                    <div class="text-danger small">{{ form.developer.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.genre.id_for_label }}" class="form-label">Жанр *</label>
+                                {{ form.genre }}
+                                {% if form.genre.errors %}
+                                    <div class="text-danger small">{{ form.genre.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.release_date.id_for_label }}" class="form-label">Дата выпуска *</label>
+                                {{ form.release_date }}
+                                {% if form.release_date.errors %}
+                                    <div class="text-danger small">{{ form.release_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.price.id_for_label }}" class="form-label">Цена ($) *</label>
+                            {{ form.price }}
+                            {% if form.price.errors %}
+                                <div class="text-danger small">{{ form.price.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Описание *</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.image.id_for_label }}" class="form-label">Изображение игры *</label>
+                                {{ form.image }}
+                                {% if form.image.errors %}
+                                    <div class="text-danger small">{{ form.image.errors.0 }}</div>
+                                {% endif %}
+                                <div class="form-text">Рекомендуемый размер: 400x300px</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.game_file.id_for_label }}" class="form-label">Файл игры *</label>
+                                {{ form.game_file }}
+                                {% if form.game_file.errors %}
+                                    <div class="text-danger small">{{ form.game_file.errors.0 }}</div>
+                                {% endif %}
+                                <div class="form-text">Поддерживаемые форматы: .zip, .rar, .exe</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'game_list' %}" class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-times me-2"></i>Отмена
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload me-2"></i>Загрузить игру
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Информация о загрузке -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5><i class="fas fa-info-circle me-2"></i>Правила загрузки</h5>
+                    <ul class="mb-0">
+                        <li>Убедитесь, что у вас есть права на распространение игры</li>
+                        <li>Игра должна быть работоспособной и не содержать вирусов</li>
+                        <li>Изображение должно соответствовать содержанию игры</li>
+                        <li>Описание должно быть информативным и честным</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

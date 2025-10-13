@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+
+{% block title %}Все игры - GameSite{% endblock %}
+
+{% block content %}
+<div id="game-list-root" data-games='{{ games_json|escapejs }}'></div>
+{% endblock %}
