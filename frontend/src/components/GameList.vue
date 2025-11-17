@@ -1,155 +1,56 @@
 <template>
   <v-container class="py-8">
     <!-- Заголовок и статистика -->
-    <div class="games-header mb-6">
-      <div class="d-flex align-center justify-space-between mb-4">
-        <div class="d-flex align-center">
-          <v-icon icon="mdi-gamepad-variant" class="me-2" size="32"></v-icon>
-          <div>
-            <h1 class="text-h4 mb-1">{{ pageTitle }}</h1>
-            <div class="text-body-2 text-medium-emphasis">
-              {{ totalGames }} {{ getGamesText(totalGames) }} найдено
+    <div class="games-header mb-8">
+      <div class="header-content">
+        <div class="header-main">
+          <div class="header-icon">
+            <v-icon icon="mdi-gamepad-variant" size="40"></v-icon>
+          </div>
+          <div class="header-text">
+            <h1 class="page-title">{{ pageTitle }}</h1>
+            <div class="page-subtitle">
+              {{ totalCount }} {{ getGamesText(totalCount) }} найдено
             </div>
           </div>
         </div>
-        
-        <!-- Быстрые фильтры -->
-        <div class="quick-filters d-none d-md-flex gap-2">
-          <v-chip
-            v-for="filter in quickFilters"
-            :key="filter.value"
-            :variant="activeQuickFilter === filter.value ? 'elevated' : 'outlined'"
-            :color="activeQuickFilter === filter.value ? 'primary' : 'default'"
-            size="small"
-            clickable
-            @click="setQuickFilter(filter.value)"
-          >
-            <v-icon :icon="filter.icon" size="16" class="me-1"></v-icon>
-            {{ filter.title }}
-          </v-chip>
-        </div>
       </div>
-
-      <!-- Поиск и фильтры -->
-      <v-card elevation="2" class="mb-6">
-        <v-card-text class="pa-4">
-          <SearchBar
-            v-model="searchQuery"
-            placeholder="Поиск игр по названию, разработчику, описанию..."
-            :show-suggestions="true"
-            :suggestions="searchSuggestions"
-            :show-filters="true"
-            :genre-filter="true"
-            :price-filter="true"
-            :sort-options="sortOptions"
-            :search-on-input="true"
-            :debounce-time="500"
-            @search="handleSearch"
-            @filter-change="handleFilterChange"
-            @suggestion-select="handleSuggestionSelect"
-          />
-        </v-card-text>
-      </v-card>
     </div>
 
-    <!-- Toolbar -->
-    <div class="games-toolbar d-flex align-center justify-space-between mb-4">
-      <div class="d-flex align-center gap-3">
-        <!-- Вид отображения -->
-        <v-btn-toggle v-model="viewMode" mandatory variant="outlined" density="compact">
-          <v-btn value="grid" icon="mdi-view-grid"></v-btn>
-          <v-btn value="list" icon="mdi-view-list"></v-btn>
+    <!-- Toolbar (только переключатель вида) -->
+    <div class="games-toolbar mb-6">
+      <div class="toolbar-content">
+        <v-btn-toggle v-model="viewMode" mandatory variant="outlined" density="compact" class="view-toggle">
+          <v-btn value="grid" icon="mdi-view-grid" class="toggle-btn"></v-btn>
+          <v-btn value="list" icon="mdi-view-list" class="toggle-btn"></v-btn>
         </v-btn-toggle>
-        
-        <!-- Количество на странице -->
-        <v-select
-          v-model="pageSize"
-          :items="pageSizeOptions"
-          label="Показать"
-          variant="outlined"
-          density="compact"
-          style="max-width: 120px;"
-          hide-details
-          @update:model-value="handlePageSizeChange"
-        ></v-select>
-      </div>
-      
-      <!-- Сортировка -->
-      <div class="d-flex align-center gap-2">
-        <span class="text-body-2">Сортировка:</span>
-        <v-select
-          v-model="currentSort"
-          :items="sortOptions"
-          variant="outlined"
-          density="compact"
-          style="max-width: 200px;"
-          hide-details
-          @update:model-value="handleSortChange"
-        ></v-select>
       </div>
     </div>
 
-    <!-- Активные фильтры -->
-    <div v-if="hasActiveFilters" class="active-filters mb-4">
-      <div class="d-flex align-center gap-2 mb-2">
-        <span class="text-body-2">Активные фильтры:</span>
-        <v-btn
-          size="small"
-          variant="text"
-          prepend-icon="mdi-filter-remove"
-          @click="clearAllFilters"
-        >
-          Очистить все
-        </v-btn>
-      </div>
-      <div class="d-flex flex-wrap gap-2">
-        <v-chip
-          v-if="activeFilters.genre"
-          size="small"
-          closable
-          @click:close="removeFilter('genre')"
-        >
-          Жанр: {{ activeFilters.genre }}
-        </v-chip>
-        <v-chip
-          v-if="activeFilters.priceRange"
-          size="small"
-          closable
-          @click:close="removeFilter('priceRange')"
-        >
-          Цена: {{ getPriceRangeText(activeFilters.priceRange) }}
-        </v-chip>
-        <v-chip
-          v-if="searchQuery"
-          size="small"
-          closable
-          @click:close="removeFilter('search')"
-        >
-          Поиск: "{{ searchQuery }}"
-        </v-chip>
-      </div>
-    </div>
+    <!-- Активные фильтры убраны -->
 
     <!-- Загрузка -->
-    <div v-if="loading" class="text-center py-8">
+    <div v-if="loading" class="loading-container">
       <LoadingSpinner
+        :skeleton="viewMode === 'grid' ? 'game-cards' : 'game-list'"
         :message="'Загрузка игр...'"
-        :centered="true"
+        :centered="false"
       />
     </div>
 
     <!-- Список игр -->
     <div v-else-if="games.length > 0" class="games-content">
       <!-- Сетка -->
-      <v-row v-if="viewMode === 'grid'">
+      <v-row v-if="viewMode === 'grid'" class="games-grid">
         <v-col
-          v-for="game in games"
+          v-for="(game, index) in games"
           :key="game.id"
           cols="12"
           sm="6"
           md="4"
           lg="3"
-          class="mb-4"
+          class="game-col"
+          :style="{ animationDelay: `${index * 0.1}s` }"
         >
           <GameCard :game="game" />
         </v-col>
@@ -158,10 +59,11 @@
       <!-- Список -->
       <div v-else class="games-list">
         <v-card
-          v-for="game in games"
+          v-for="(game, index) in games"
           :key="game.id"
           variant="outlined"
-          class="mb-3 game-list-item"
+          class="game-list-item"
+          :style="{ animationDelay: `${index * 0.1}s` }"
           @click="navigateToGame(game)"
         >
           <div class="d-flex align-center pa-4">
@@ -230,30 +132,17 @@
     <!-- Пустое состояние -->
     <div v-else class="empty-state text-center py-12">
       <v-icon
-        :icon="hasActiveFilters ? 'mdi-magnify-remove' : 'mdi-gamepad-variant-outline'"
+        :icon="'mdi-gamepad-variant-outline'"
         size="64"
         class="mb-4 text-medium-emphasis"
       ></v-icon>
       <div class="text-h5 mb-2">
-        {{ hasActiveFilters ? 'Ничего не найдено' : 'Пока нет загруженных игр' }}
+        Пока нет загруженных игр
       </div>
       <div class="text-body-1 text-medium-emphasis mb-4">
-        {{
-          hasActiveFilters
-            ? 'Попробуйте изменить параметры поиска'
-            : 'Станьте первым, кто загрузит игру!'
-        }}
+        Станьте первым, кто загрузит игру!
       </div>
       <v-btn
-        v-if="hasActiveFilters"
-        color="primary"
-        variant="outlined"
-        @click="clearAllFilters"
-      >
-        Очистить фильтры
-      </v-btn>
-      <v-btn
-        v-else
         color="primary"
         href="/upload/"
         prepend-icon="mdi-upload"
@@ -265,9 +154,9 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { formatPriceUSD } from '../utils/currency'
 import GameCard from './GameCard.vue'
-import SearchBar from './SearchBar.vue'
 import Pagination from './Pagination.vue'
 import LoadingSpinner from './LoadingSpinner.vue'
 
@@ -291,208 +180,51 @@ const props = defineProps({
   loading: {
     type: Boolean,
     default: false
-  },
-  // Начальные фильтры
-  initialFilters: {
-    type: Object,
-    default: () => ({})
   }
 })
 
-const emit = defineEmits([
-  'search',
-  'filter-change',
-  'sort-change',
-  'page-change',
-  'page-size-change'
-])
+const emit = defineEmits(['page-change'])
+// Загрузка игр через API, если пропсы не переданы (SPA режим)
+const internalGames = ref([])
+const isLoading = ref(false)
 
-// Состояние поиска и фильтрации
-const searchQuery = ref('')
-const searchSuggestions = ref([])
-const activeFilters = ref({ ...props.initialFilters })
-const currentSort = ref('newest')
-const currentPage = ref(1)
-const pageSize = ref(12)
-const viewMode = ref('grid')
-const activeQuickFilter = ref('')
+const shouldFetchFromApi = computed(() => !props.games || props.games.length === 0)
 
-// Быстрые фильтры
-const quickFilters = [
-  { title: 'Новые', value: 'newest', icon: 'mdi-new-box' },
-  { title: 'Популярные', value: 'popular', icon: 'mdi-fire' },
-  { title: 'Бесплатные', value: 'free', icon: 'mdi-gift' },
-  { title: 'Топ рейтинг', value: 'top-rated', icon: 'mdi-star' },
-  { title: 'Инди', value: 'indie', icon: 'mdi-heart' }
-]
+const loadGames = async () => {
+  isLoading.value = true
+  try {
+    const response = await fetch('/api/games/')
+    const data = await response.json()
+    internalGames.value = Array.isArray(data.results) ? data.results : []
+  } catch (e) {
+    console.error('Не удалось загрузить список игр', e)
+  } finally {
+    isLoading.value = false
+  }
+}
 
-// Опции сортировки
-const sortOptions = [
-  { title: 'Сначала новые', value: 'newest' },
-  { title: 'Сначала старые', value: 'oldest' },
-  { title: 'По названию (А-Я)', value: 'title-asc' },
-  { title: 'По названию (Я-А)', value: 'title-desc' },
-  { title: 'По популярности', value: 'popular' },
-  { title: 'По рейтингу', value: 'rating' },
-  { title: 'Сначала дешевые', value: 'price-asc' },
-  { title: 'Сначала дорогие', value: 'price-desc' },
-  { title: 'По количеству скачиваний', value: 'downloads' }
-]
-
-// Опции размера страницы
-const pageSizeOptions = [
-  { title: '12', value: 12 },
-  { title: '24', value: 24 },
-  { title: '48', value: 48 },
-  { title: '96', value: 96 }
-]
-
-// Вычисляемые свойства
-const hasActiveFilters = computed(() => {
-  return searchQuery.value || 
-         activeFilters.value.genre || 
-         activeFilters.value.priceRange ||
-         activeQuickFilter.value
+onMounted(() => {
+  if (shouldFetchFromApi.value) {
+    loadGames()
+  }
 })
 
-const handleSearch = (searchData) => {
-  searchQuery.value = searchData.query
-  Object.assign(activeFilters.value, searchData.filters)
-  currentPage.value = 1
-  
-  emit('search', {
-    query: searchData.query,
-    filters: activeFilters.value,
-    sort: currentSort.value,
-    page: currentPage.value,
-    pageSize: pageSize.value
-  })
-}
+// Источник данных для шаблона
+const games = computed(() => shouldFetchFromApi.value ? internalGames.value : props.games)
+const loading = computed(() => shouldFetchFromApi.value ? isLoading.value : props.loading)
+const totalCount = computed(() => shouldFetchFromApi.value ? games.value.length : props.totalGames)
 
-const handleFilterChange = (filters) => {
-  Object.assign(activeFilters.value, filters)
-  currentPage.value = 1
-  
-  emit('filter-change', {
-    filters: activeFilters.value,
-    query: searchQuery.value,
-    sort: currentSort.value,
-    page: currentPage.value,
-    pageSize: pageSize.value
-  })
-}
-
-const handleSortChange = (newSort) => {
-  currentSort.value = newSort
-  currentPage.value = 1
-  
-  emit('sort-change', {
-    sort: newSort,
-    query: searchQuery.value,
-    filters: activeFilters.value,
-    page: currentPage.value,
-    pageSize: pageSize.value
-  })
-}
-
+// Убраны поиск/фильтры/сортировка
+const currentPage = ref(1)
+const viewMode = ref('grid')
 const handlePageChange = (pageData) => {
   currentPage.value = pageData.page
   
   emit('page-change', {
     ...pageData,
-    query: searchQuery.value,
-    filters: activeFilters.value,
-    sort: currentSort.value
-  })
-}
-
-const handlePageSizeChange = (newPageSize) => {
-  pageSize.value = newPageSize
-  currentPage.value = 1
-  
-  emit('page-size-change', {
-    pageSize: newPageSize,
-    page: 1,
-    query: searchQuery.value,
-    filters: activeFilters.value,
-    sort: currentSort.value
-  })
-}
-
-const handleSuggestionSelect = (suggestion) => {
-  // Обработка выбора предложения поиска
-  if (suggestion.type === 'game') {
-    navigateToGame(suggestion.game)
-  } else if (suggestion.type === 'genre') {
-    setQuickFilter('genre')
-    activeFilters.value.genre = suggestion.value
-    handleFilterChange(activeFilters.value)
-  }
-}
-
-const setQuickFilter = (filterValue) => {
-  activeQuickFilter.value = filterValue
-  
-  // Сброс других фильтров
-  activeFilters.value = {}
-  searchQuery.value = ''
-  
-  switch (filterValue) {
-    case 'newest':
-      currentSort.value = 'newest'
-      break
-    case 'popular':
-      currentSort.value = 'popular'
-      break
-    case 'free':
-      activeFilters.value.priceRange = 'free'
-      break
-    case 'top-rated':
-      currentSort.value = 'rating'
-      break
-    case 'indie':
-      activeFilters.value.genre = 'Инди'
-      break
-  }
-  
-  currentPage.value = 1
-  emitFilterChange()
-}
-
-const removeFilter = (filterType) => {
-  switch (filterType) {
-    case 'genre':
-      activeFilters.value.genre = null
-      break
-    case 'priceRange':
-      activeFilters.value.priceRange = null
-      break
-    case 'search':
-      searchQuery.value = ''
-      break
-  }
-  
-  activeQuickFilter.value = ''
-  currentPage.value = 1
-  emitFilterChange()
-}
-
-const clearAllFilters = () => {
-  searchQuery.value = ''
-  activeFilters.value = {}
-  activeQuickFilter.value = ''
-  currentSort.value = 'newest'
-  currentPage.value = 1
-  emitFilterChange()
-}
-
-const emitFilterChange = () => {
-  emit('filter-change', {
-    query: searchQuery.value,
-    filters: activeFilters.value,
-    sort: currentSort.value,
-    page: currentPage.value,
-    pageSize: pageSize.value
+    query: null,
+    filters: {},
+    sort: null
   })
 }
 
@@ -502,10 +234,7 @@ const navigateToGame = (game) => {
   }
 }
 
-const formatPrice = (price) => {
-  if (price === 0 || price === '0') return 'Бесплатно'
-  return `${price} ₽`
-}
+const formatPrice = (price) => formatPriceUSD(price)
 
 const getGenreColor = (genre) => {
   const genreColors = {
@@ -541,55 +270,152 @@ const getGamesText = (count) => {
   }
 }
 
-const getPriceRangeText = (priceRange) => {
-  const ranges = {
-    'free': 'Бесплатно',
-    '0-500': 'До 500₽',
-    '500-1000': '500₽ - 1000₽',
-    '1000-2000': '1000₽ - 2000₽',
-    '2000+': 'Свыше 2000₽'
-  }
-  return ranges[priceRange] || priceRange
-}
-
-// Инициализация при монтировании
-onMounted(() => {
-  // Применяем начальные фильтры
-  if (Object.keys(props.initialFilters).length > 0) {
-    Object.assign(activeFilters.value, props.initialFilters)
-  }
-})
+// Инициализация при монтировании: ничего не делаем для фильтрации
 </script>
 
 <style scoped>
 .games-header {
-  margin-bottom: 24px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+  border-radius: 20px;
+  padding: 32px;
+  margin-bottom: 32px;
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  position: relative;
+  overflow: hidden;
 }
 
-.quick-filters {
-  flex-wrap: wrap;
+.games-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.02) 0%, rgba(139, 92, 246, 0.02) 100%);
+  pointer-events: none;
+}
+
+.header-content {
+  position: relative;
+  z-index: 2;
+}
+
+.header-main {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header-icon {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 16px;
+  padding: 16px;
+  color: white;
+  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.page-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.2;
+}
+
+.page-subtitle {
+  font-size: 1.1rem;
+  color: #6b7280;
+  font-weight: 500;
+  margin-top: 8px;
 }
 
 .games-toolbar {
-  background: rgba(0, 0, 0, 0.02);
-  border-radius: 8px;
-  padding: 12px 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
-.active-filters {
-  background: rgba(25, 118, 210, 0.04);
-  border-radius: 8px;
-  padding: 12px 16px;
+.toolbar-content {
+  display: flex;
+  justify-content: center;
+}
+
+.view-toggle {
+  background: rgba(99, 102, 241, 0.05);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.toggle-btn {
+  border-radius: 8px !important;
+  transition: all 0.3s ease;
+}
+
+.toggle-btn:hover {
+  background: rgba(99, 102, 241, 0.1) !important;
+}
+
+.games-content {
+  position: relative;
+}
+
+.games-grid {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.games-list {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.game-col {
+  animation: slideInUp 0.6s ease-out both;
 }
 
 .game-list-item {
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  border-radius: 16px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  overflow: hidden;
+  position: relative;
+  animation: slideInUp 0.6s ease-out both;
+}
+
+.game-list-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.02) 0%, rgba(139, 92, 246, 0.02) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
 }
 
 .game-list-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 12px 40px rgba(99, 102, 241, 0.15), 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.game-list-item:hover::before {
+  opacity: 1;
 }
 
 .empty-state {
@@ -598,26 +424,79 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.02) 0%, rgba(139, 92, 246, 0.02) 100%);
+  border-radius: 20px;
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  animation: fadeIn 0.6s ease-out;
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.loading-container {
+  padding: 20px 0;
+}
+
+/* Адаптивность */
 @media (max-width: 960px) {
-  .games-toolbar {
+  .games-header {
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  
+  .header-main {
     flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
+    text-align: center;
+    gap: 16px;
   }
   
-  .games-toolbar .d-flex {
-    justify-content: space-between;
+  .page-title {
+    font-size: 2rem;
   }
   
-  .quick-filters {
-    display: flex !important;
-    justify-content: center;
+  .games-toolbar {
+    padding: 16px;
   }
 }
 
 @media (max-width: 600px) {
+  .games-header {
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .page-title {
+    font-size: 1.75rem;
+  }
+  
+  .header-icon {
+    padding: 12px;
+  }
+  
   .game-list-item .d-flex {
     flex-direction: column;
     text-align: center;

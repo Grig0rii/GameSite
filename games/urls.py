@@ -6,6 +6,8 @@ urlpatterns = [
     path('games/', views.game_list, name='game_list'),
     path('games/<int:game_id>/', views.game_detail, name='game_detail'),
     path('upload/', views.upload_game, name='upload_game'),
+    # Простое JSON API для списка игр
+    path('api/games/', views.api_games, name='api_games'),
     path('register/', views.register, name='register'),
     path('login/', views.user_login, name='login'),
     path('logout/', views.user_logout, name='logout'),

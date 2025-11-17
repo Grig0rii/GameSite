@@ -8,6 +8,7 @@ from .models import Game
 from django.urls import reverse
 import json
 from .forms import GameForm, CustomUserCreationForm, CustomAuthenticationForm
+from django.http import JsonResponse
 
 
 def home(request):
@@ -39,6 +40,25 @@ def game_list(request):
     }
     return render(request, 'games/game_list.html', context)
 
+
+def api_games(request):
+    """JSON список игр для фронтенда"""
+    games = Game.objects.all()
+    payload = []
+    for g in games:
+        payload.append({
+            'id': g.id,
+            'title': g.title,
+            'developer': g.developer,
+            'genre': g.genre,
+            'price': float(g.price) if hasattr(g.price, 'quantize') or hasattr(g.price, 'as_tuple') else g.price,
+            'description': (g.description or '')[:180],
+            'image_url': g.image.url if getattr(g, 'image', None) else None,
+            'release_date': g.release_date.isoformat() if getattr(g, 'release_date', None) else '',
+            'uploaded_by': g.uploaded_by.username if getattr(g, 'uploaded_by', None) else '',
+            'detail_url': reverse('game_detail', args=[g.id]),
+        })
+    return JsonResponse({'results': payload, 'count': len(payload)})
 
 def game_detail(request, game_id):
     """Детальная страница игры"""

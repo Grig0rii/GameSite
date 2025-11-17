@@ -178,6 +178,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { formatPriceUSD } from '../utils/currency'
 
 const props = defineProps({
   game: {
@@ -204,10 +205,7 @@ const genreColor = computed(() => {
   return genreColors[props.game.genre] || 'primary'
 })
 
-const formatPrice = (price) => {
-  if (price === 0 || price === '0') return 'Бесплатно'
-  return `${price} ₽`
-}
+const formatPrice = (price) => formatPriceUSD(price)
 
 const formatDate = (date) => {
   if (!date) return 'Не указано'

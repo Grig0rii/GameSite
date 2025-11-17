@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "vue": "^3.4.29",
+    "vue-router": "^4.6.3",
     "vuetify": "^3.5.16"
   },
   "devDependencies": {
@@ -18,4 +19,3 @@
     "vite": "^5.4.0"
   }
 }
-
